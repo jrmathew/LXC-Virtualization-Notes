@@ -1,0 +1,126 @@
+## List locally cached images
+
+```
+$ sudo lxc image list 
+
++-------+--------------+--------+-----------------------------------------------+--------------+-----------+----------+-----------------------------+
+| ALIAS | FINGERPRINT  | PUBLIC |                  DESCRIPTION                  | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE         |
++-------+--------------+--------+-----------------------------------------------+--------------+-----------+----------+-----------------------------+
+|       | 70d3dcaabcff | no     | ubuntu 18.04 LTS amd64 (release) (20200519.1) | x86_64       | CONTAINER | 179.16MB | Jun 6, 2020 at 9:30am (UTC) |
++-------+--------------+--------+-----------------------------------------------+--------------+-----------+----------+-----------------------------+
+|       | 30589d10914d | no     | Alpine 3.10 amd64 (20200605_13:09)            | x86_64       | CONTAINER | 2.40MB   | Jun 6, 2020 at 9:30am (UTC) |
++-------+--------------+--------+-----------------------------------------------+--------------+-----------+----------+-----------------------------+
+
+```
+
+## Delete an image
+
+```
+$ sudo lxc image delete 70d3dcaabcff
+
+$ sudo lxc image list 
++-------+--------------+--------+------------------------------------+--------------+-----------+--------+-----------------------------+
+| ALIAS | FINGERPRINT  | PUBLIC |            DESCRIPTION             | ARCHITECTURE |   TYPE    |  SIZE  |         UPLOAD DATE         |
++-------+--------------+--------+------------------------------------+--------------+-----------+--------+-----------------------------+
+|       | 30589d10914d | no     | Alpine 3.10 amd64 (20200605_13:09) | x86_64       | CONTAINER | 2.40MB | Jun 6, 2020 at 9:30am (UTC) |
++-------+--------------+--------+------------------------------------+--------------+-----------+--------+-----------------------------+
+
+```
+
+## Downloading images without launching it.
+
+```
+$ sudo lxc image copy images:alpine/3.5 local: --alias alp 
+
+```
+
+The copy parameter after the image parameter indicates that we want to download a copy of the image specified in images parameter. The local parameter indicates that we can't to cache it locally and the alias flag is used to give the cached copy a name.
+
+## Launch the cached image
+
+```
+$ sudo lxc launch alp web 
+
+```
+
+Here alp is the name of the image that we have mirrored to the local machin and web is the name of the container we are creating and launching.
+
+## Running commands inside the container.
+
+There are essentially two ways to do it.
+
+- The first method is to just pass in the command as follows
+
+```
+$ sudo lxc exec a1 -- apk update 
+
+```
+
+- The second method would be logging in to the container.
+
+```
+$ sudo lxc exec al -- ash
+~ # apk add nginx
+(1/2) Installing pcre (8.43-r0)
+(2/2) Installing nginx (1.16.1-r2)
+Executing nginx-1.16.1-r2.pre-install
+Executing busybox-1.30.1-r4.trigger
+OK: 10 MiB in 21 packages
+~ # exit
+
+```
+
+## Edit files without accessing the container prompt
+
+```
+$ sudo lxc file edit a1/etc/nginx/conf.d/default.conf 
+
+```
+
+This will allow us to access the file using our local editor and avoid installing unnecessary packages.
+
+This in essence creates a temporary file on the host and write the changes to the container after exiting the command.
+
+## Push a file into a container
+
+```
+$ sudo lxc file push index.html a1/var/www/ 
+
+```
+
+## Add a service to the default group
+
+```
+$ sudo lxc exec a1 -- rc-update add nginx default  
+* service nginx added to runlevel default 
+
+```
+
+Default is the group to which nginx service is added. This will ensure that nginx will restart every time the container is restarted.
+
+## Start a service
+
+```
+$ sudo lxc exec a1 -- /etc/init.d/nginx start
+ * Caching service dependencies ...                           [ ok ]
+ * /run/nginx: creating directory
+ * /run/nginx: correcting owner
+ * Starting nginx ...                                         [ ok ]
+
+```
+
+## Bingo
+
+```
+$ sudo lxc list 
++------+---------+-----------------------+-----------------------------------------------+-----------+-----------+----------+
+| NAME |  STATE  |         IPV4          |                     IPV6                      |   TYPE    | SNAPSHOTS | LOCATION |
++------+---------+-----------------------+-----------------------------------------------+-----------+-----------+----------+
+| a1   | RUNNING | 10.156.178.188 (eth0) | fd42:93f2:521c:69a4:216:3eff:fe2a:bb52 (eth0) | CONTAINER | 0         | cicada   |
++------+---------+-----------------------+-----------------------------------------------+-----------+-----------+----------+
+$ sudo  curl http://10.156.178.188/
+Served from the a1 container!
+
+```
+
+Served from the a1 container!
