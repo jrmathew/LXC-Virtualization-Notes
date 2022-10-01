@@ -1,0 +1,97 @@
+```
+$ sudo lxc snapshot a1 a1-snap-Jun6-2020 
+
+```
+
+## Get info about container
+
+```
+$ sudo lxc info a1
+Name: a1
+Location: cicada
+Remote: unix://
+Architecture: x86_64
+Created: 2020/06/06 09:30 UTC
+Status: Running
+Type: container
+Profiles: default
+Pid: 14799
+Ips:
+  eth0:	inet	10.156.178.188	veth9fc96153
+  eth0:	inet6	fd42:93f2:521c:69a4:216:3eff:fe2a:bb52	veth9fc96153
+  eth0:	inet6	fe80::216:3eff:fe2a:bb52	veth9fc96153
+  lo:	inet	127.0.0.1
+  lo:	inet6	::1
+Resources:
+  Processes: 10
+  CPU usage:
+    CPU usage (in seconds): 2
+  Memory usage:
+    Memory (current): 9.87MB
+    Memory (peak): 25.07MB
+  Network usage:
+    lo:
+      Bytes received: 0B
+      Bytes sent: 0B
+      Packets received: 0
+      Packets sent: 0
+    eth0:
+      Bytes received: 2.09MB
+      Bytes sent: 62.20kB
+      Packets received: 1093
+      Packets sent: 892
+Snapshots:
+  a1-snap-Jun6-2020 (taken at 2020/06/06 14:13 UTC) (stateless)
+
+```
+
+## Restoring snaps
+
+In case the file have been corrupted or the container have another issues, its easy to rollback to using a snapshot.
+
+```
+$ sudo lxc restore a1 a1-snap-Jun6-2020 
+
+```
+
+Sometimes there will be issues even though the snapshot is restored.
+
+```
+$ curl http://10.156.178.188/ curl: (7) Failed to connect to 10.156.178.188 port 80: Connection refused 
+
+```
+
+Check the logs
+
+```
+$ sudo lxc info --show-log a1 
+
+```
+
+Have you tried turning it off and on again?
+
+```
+$ sudo lxc restart a1 
+$ curl http://10.156.178.188/ 
+Served from the a1 container! 
+
+```
+
+## Delete snapshot
+
+```
+$ sudo lxc delete a1/a1-snap-Jun6-2020 
+
+```
+
+## Delete containers
+
+To do so, a running container must be first stopped.
+
+```
+$ sudo lxc stop a1 
+$ sudo lxc delete a1 
+
+```
+
+This does not delete the image files
